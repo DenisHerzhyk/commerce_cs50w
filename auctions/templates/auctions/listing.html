@@ -1,0 +1,106 @@
+{% extends "auctions/layout.html" %}
+
+{% block body %}
+    <h2 style="text-align: center; margin-bottom: 30px;">Listing: {{ listing.title }}</h2>
+
+    {% if listing %}
+        <div class="card">
+            <div class="upper_panel">
+                <img src="{{ listing.image_url }}" alt="{{ listing.title }}">
+                <form action="{% if listing.is_watchlist %}{% url 'watchlist_remove' listing.id %}{% else %}{% url 'watchlist_add' listing.id %}{% endif %}" method="post">
+                    {% csrf_token %}
+                    <input type="hidden" name="listing_id" value="{{ listing.id }}">
+                    {% if listing.is_watchlist %}
+                        <input class="watchlist_button" type="submit" style="background-color: red; color: white;" value="Remove from Watchlist">
+                    {% else %}
+                        <input class="watchlist_button" type="submit" value="Add to Watchlist" {% if not listing.is_active %}disabled{% endif %}>
+                    {% endif %}
+                </form>
+                <p class="category-title">{{ listing.category }}</p>
+            </div>
+            <div class="content">
+                <div>
+                    <div>
+                        <h3>{{ listing.title }}</h3>
+                        <p style="font-style: italic; color: gray;">{{ listing.description }}</p>   
+                    </div>
+                    <form action="{% url 'unactivate' listing.id %}" method="post">
+                        {% csrf_token %}
+                        <input type="hidden" name="listing_id" value="{{ listing.id }}">
+                        {% if error_user %}
+                            <div style="color: red;">{{ error_user }}</div>
+                            <br>
+                        {% endif %}
+                        {% if listing.is_active %}
+                            <input class="btn btn-danger" type="submit" value="Unactivate">
+                        {% else %}
+                            <input class="btn btn-success" type="submit" value="Activate">
+                        {% endif %}
+                    </form>
+                </div>
+                
+                
+                <div class="low_panel">
+                    <p><strong>Price:</strong> {{ listing.starting_bid }} $</p>
+                </div>
+                <form action="{% url 'bid' listing.id %}" method="post">
+                    {% csrf_token %}
+                    <input type="hidden" name="listing_id" value="{{ listing.id }}">
+                    {% if error %}
+                        <div style="color: red;">{{ error }}</div>
+                        <br>
+                    {% endif %}
+                    <input type="number" name="bid_amount" placeholder="Bid Amount" {% if not listing.is_active %}disabled{% endif %}>
+                    <input class="btn btn-primary" type="submit" value="Place Bid" {% if not listing.is_active %}disabled{% endif %}>
+                </form>
+                <br><br>
+                <div class="details">
+                    <h4>Details</h4>
+                    <ul>
+                        <li>Category: {{ listing.category }}</li>
+                        <li>Creator: <strong>{{ listing.creator }}</strong></li>
+                        <li>Active: {{ listing.is_active }}</li>
+                    </ul>
+                </div>
+                <br><br>
+                <div class="bids">
+                    <h4>Bids</h4>
+                    {% for bid in bids %}   
+                        Bid by <strong>{{ bid.bidder }}</strong> for <strong>{{ bid.amount }} $</strong> at <strong>{{ bid.time }}</strong>
+                        <br>
+                    {% empty %}
+                        <p>No bids yet.</p>
+                    {% endfor %}
+                </div>
+                {% if not listing.is_active and listing.winner %}
+                    <div style="color: green;">
+                        <strong>Winner:</strong> {{ listing.winner.username }}
+                    </div>
+                {% endif %}
+                <br><br>
+                <div class="comments">
+                    <h4>Comments</h4>
+                    <form action="{% url 'comment' listing.id %}" method="post">
+                        {% csrf_token %}
+                        <input type="hidden" name="listing_id" value="{{ listing.id }}">
+                        <textarea name="comment" placeholder="Comment" required {% if not listing.is_active %}disabled{% endif %}></textarea>
+                        <br>
+                        <input class="btn btn-primary" type="submit" value="Comment" {% if not listing.is_active %}disabled{% endif %}>
+                    </form>
+                    <br><br>
+                    {% for comment in comments %}
+                        <div style="color: gray; font-size: 13px;">{{ comment.time }}</div>
+                        From <strong style="color: blue">{{ comment.commenter }}</strong>:
+                        <br>
+                        <div style="font-style: italic; color: rgb(71, 71, 71);">{{ comment.comment }}</div>
+                        <br><br>
+                    {% empty %}
+                        <p>No comments yet.</p>
+                    {% endfor %}
+                </div>
+            </div>
+        </div>
+    {% else %}
+        <p>No active listing found.</p>
+    {% endif %}
+{% endblock %}

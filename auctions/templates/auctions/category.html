@@ -1,0 +1,37 @@
+{% extends "auctions/layout.html" %}
+
+{% block body %}
+    <h2>Category</h2>
+
+    <div class="listings">
+        {% for listing in listings %}
+            <div class="listing">
+                <div class="upper_panel">
+                    <img src="{{ listing.image_url }}" alt="{{ listing.title }}">
+                    <form action="{% if listing.is_watchlist %}{% url 'watchlist_remove' listing.id %}{% else %}{% url 'watchlist_add' listing.id %}{% endif %}" method="post">
+                        {% csrf_token %}
+                        <input type="hidden" name="listing_id" value="{{ listing.id }}">
+                        {% if listing.is_watchlist %}
+                            <input class="watchlist_button" type="submit" style="background-color: red; color: white;" value="Remove from Watchlist">
+                        {% else %}
+                            <input class="watchlist_button" type="submit" value="Add to Watchlist" {% if not listing.is_active %}disabled{% endif %}>
+                        {% endif %}
+                    </form>
+                    {% if not listing.is_active %}
+                        <p class="unactive" style="background-color: red; color: white; position: absolute; top: 50%; left: 30%; padding: 5px; border-radius: 5px;">Not Active</p>
+                    {% endif %}
+                    <p class="category-title">{{ listing.category }}</p>
+                </div>
+                <div class="content">
+                    <a href="{% url 'listing' listing.id %}"><h3>{{ listing.title }}</h3></a>
+                    <p style="font-style: italic; color: lightgray">{{ listing.description }}</p>   
+                    <div class="low_panel">
+                        <p>Price: {{ listing.starting_bid }} $</p>
+                        <p style="font-weight: bold;">{{ listing.creator }}</p>
+                    </div>
+                </div>
+            </div>
+        {% empty %}
+            <p>No listings in this category.</p>
+        {% endfor %}
+{% endblock %}
